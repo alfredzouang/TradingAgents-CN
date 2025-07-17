@@ -109,7 +109,7 @@ if [[ "$IMAGE_EXISTS" == "true" ]]; then
 else
   echo "Building Docker image: $FULL_IMAGE_NAME"
   PROJECT_ROOT="$PWD"
-  docker build --platform=linux/amd64 -t "$FULL_IMAGE_NAME" -f "$DOCKERFILE" "$PROJECT_ROOT"
+  docker build --no-cache --platform=linux/amd64 -t "$FULL_IMAGE_NAME" -f "$DOCKERFILE" "$PROJECT_ROOT"
 
   if [[ -n "$REGISTRY_USER" && -n "$REGISTRY_PASS" ]]; then
     echo "Logging in to registry $REGISTRY_URL"
