@@ -8,7 +8,7 @@ CHART_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../helm" && pwd)"
 RELEASE_NAME="tradingagents-cn"
 NAMESPACE="default"
 VALUES_FILE="$CHART_DIR/values.yaml"
-DOCKERFILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/Dockerfile"
+DOCKERFILE="$PWD/Dockerfile"
 IMAGE_REPO="tradingaz.azurecr.io"
 IMAGE_NAME="tradingagents-cn"
 if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
@@ -108,7 +108,7 @@ if [[ "$IMAGE_EXISTS" == "true" ]]; then
   echo "Image $FULL_IMAGE_NAME already exists in registry, skipping build and push."
 else
   echo "Building Docker image: $FULL_IMAGE_NAME"
-  PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  PROJECT_ROOT="$PWD"
   docker build --platform=linux/amd64 -t "$FULL_IMAGE_NAME" -f "$DOCKERFILE" "$PROJECT_ROOT"
 
   if [[ -n "$REGISTRY_USER" && -n "$REGISTRY_PASS" ]]; then
