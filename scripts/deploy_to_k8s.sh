@@ -108,7 +108,8 @@ if [[ "$IMAGE_EXISTS" == "true" ]]; then
   echo "Image $FULL_IMAGE_NAME already exists in registry, skipping build and push."
 else
   echo "Building Docker image: $FULL_IMAGE_NAME"
-  docker build --platform=linux/amd64 -t "$FULL_IMAGE_NAME" -f "$DOCKERFILE" .
+  PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  docker build --platform=linux/amd64 -t "$FULL_IMAGE_NAME" -f "$DOCKERFILE" "$PROJECT_ROOT"
 
   if [[ -n "$REGISTRY_USER" && -n "$REGISTRY_PASS" ]]; then
     echo "Logging in to registry $REGISTRY_URL"
