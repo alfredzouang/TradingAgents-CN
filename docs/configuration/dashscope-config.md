@@ -315,7 +315,7 @@ class CustomDashScopeAdapter(OpenAICompatibleBase):
             provider_name="custom_dashscope",
             model=kwargs.get("model", "qwen-turbo"),
             api_key_env_var="DASHSCOPE_API_KEY",
-            base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+            base_url="https://dashscope-finance.aliyuncs.com/compatible-mode/v1",
             **kwargs
         )
 ```

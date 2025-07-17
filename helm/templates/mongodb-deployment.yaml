@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tradingagents-cn.fullname" . }}-mongodb
+  labels:
+    app: {{ include "tradingagents-cn.name" . }}
+    component: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "tradingagents-cn.name" . }}
+      component: mongodb
+  template:
+    metadata:
+      labels:
+        app: {{ include "tradingagents-cn.name" . }}
+        component: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: "{{ .Values.mongodb.image }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.mongodb.port }}
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: {{ .Values.mongodb.rootUsername | quote }}
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: {{ .Values.mongodb.rootPassword | quote }}
+            - name: MONGO_INITDB_DATABASE
+              value: {{ .Values.mongodb.database | quote }}
+          volumeMounts:
+            - name: mongodb-data
+              mountPath: /data/db
+            - name: mongo-init
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: mongodb-data
+          persistentVolumeClaim:
+            claimName: {{ include "tradingagents-cn.fullname" . }}-mongodb-pvc
+        - name: mongo-init
+          configMap:
+            name: {{ include "tradingagents-cn.fullname" . }}-mongo-init

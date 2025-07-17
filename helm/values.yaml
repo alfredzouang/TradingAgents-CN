@@ -1,0 +1,70 @@
+web:
+  image: tradingagents-cn:latest
+  tag: latest
+  port: 8501
+  service:
+    type: LoadBalancer
+  env:
+    PYTHONUNBUFFERED: "1"
+    PYTHONDONTWRITEBYTECODE: "1"
+    TRADINGAGENTS_MONGODB_URL: mongodb://admin:tradingagents123@mongodb:27017/tradingagents?authSource=admin
+    TRADINGAGENTS_REDIS_URL: redis://:tradingagents123@redis:6379
+    TRADINGAGENTS_CACHE_TYPE: redis
+    DOCKER_CONTAINER: "true"
+    DISPLAY: ":99"
+  command: /usr/local/bin/start-xvfb.sh python -m streamlit run web/app.py --server.address=0.0.0.0 --server.port=8501
+  envFromSecret: false
+  volumeMounts:
+    - name: web-code
+      mountPath: /app/web
+    - name: tradingagents-code
+      mountPath: /app/tradingagents
+    - name: scripts
+      mountPath: /app/scripts
+
+mongodb:
+  image: mongo:4.4
+  port: 27017
+  rootUsername: admin
+  rootPassword: tradingagents123
+  database: tradingagents
+  volumeSize: 2Gi
+
+redis:
+  image: redis:latest
+  port: 6379
+  password: tradingagents123
+  volumeSize: 1Gi
+
+redisCommander:
+  image: rediscommander/redis-commander:latest
+  port: 8081
+  enabled: true
+
+mongoExpress:
+  image: mongo-express:latest
+  port: 8082
+  enabled: true
+  adminUsername: admin
+  adminPassword: tradingagents123
+  basicAuthUsername: admin
+  basicAuthPassword: tradingagents123
+
+persistence:
+  enabled: true
+
+network:
+  name: tradingagents-network
+
+env:
+  DASHSCOPE_API_KEY: ""
+  FINNHUB_API_KEY: ""
+  TUSHARE_TOKEN: ""
+  OPENAI_API_KEY: ""
+  GOOGLE_API_KEY: ""
+  ANTHROPIC_API_KEY: ""
+  DEEPSEEK_API_KEY: ""
+  AZURE_OPENAI_API_KEY: ""
+  MONGODB_PASSWORD: ""
+  REDIS_PASSWORD: ""
+  REDDIT_CLIENT_SECRET: ""

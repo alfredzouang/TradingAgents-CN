@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tradingagents-cn.fullname" . }}-mongo-express
+  labels:
+    app: {{ include "tradingagents-cn.name" . }}
+    component: mongo-express
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.mongoExpress.port }}
+      targetPort: {{ .Values.mongoExpress.port }}
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ include "tradingagents-cn.name" . }}
+    component: mongo-express

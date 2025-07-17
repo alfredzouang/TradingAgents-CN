@@ -8,7 +8,7 @@ import time
 from typing import Any, Dict, List, Optional, Union
 from langchain_core.messages import BaseMessage
 from langchain_core.outputs import ChatResult
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_core.callbacks import CallbackManagerForLLMRun
 
 # 导入token跟踪器
@@ -18,6 +18,144 @@ try:
 except ImportError:
     TOKEN_TRACKING_ENABLED = False
 
+class AzureOpenAICompatibleBase(AzureChatOpenAI):
+    """
+    OpenAI兼容适配器基类
+    为所有支持OpenAI接口的LLM提供商提供统一实现
+    """
+    
+    def __init__(
+        self,
+        provider_name: str,
+        api_key_env_var: str,
+        model: str,
+        azure_endpoint: str,
+        azure_deployment: str,
+        api_key: Optional[str] = None,
+        temperature: float = 0.1,
+        max_tokens: Optional[int] = None,
+        **kwargs
+    ):
+        """
+        初始化OpenAI兼容适配器
+        
+        Args:
+            provider_name: 提供商名称 (如: "deepseek", "dashscope")
+            model: 模型名称
+            api_key_env_var: API密钥环境变量名
+            base_url: API基础URL
+            api_key: API密钥，如果不提供则从环境变量获取
+            temperature: 温度参数
+            max_tokens: 最大token数
+            **kwargs: 其他参数
+        """
+        
+        self.provider_name = provider_name
+        self.model_name = azure_deployment
+        
+        # 获取API密钥
+        if api_key is None:
+            api_key = os.getenv(api_key_env_var)
+            if not api_key:
+                raise ValueError(
+                    f"{provider_name} API密钥未找到。"
+                    f"请设置{api_key_env_var}环境变量或传入api_key参数。"
+                )
+        
+        # 设置OpenAI兼容参数
+        openai_kwargs = {
+            "model": model,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            **kwargs
+        }
+        
+        # 根据LangChain版本使用不同的参数名
+        try:
+            # 新版本LangChain
+            openai_kwargs.update({
+                "api_key": api_key,
+                "azure_endpoint": azure_endpoint,
+                "azure_deployment": azure_deployment
+            })
+        except:
+            # 旧版本LangChain
+            openai_kwargs.update({
+                "openai_api_key": api_key,
+                "openai_api_base": azure_endpoint
+            })
+        
+        # 初始化父类
+        super().__init__(**openai_kwargs)
+        
+        print(f"✅ {provider_name} AzureOpenAI兼容适配器初始化成功")
+        print(f"   模型: {model}")
+        print(f"   API Base: {azure_endpoint}")
+        print(f"   Azure Deployment: {azure_deployment}")
+
+    def _generate(
+        self,
+        messages: List[BaseMessage],
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[CallbackManagerForLLMRun] = None,
+        **kwargs: Any,
+    ) -> ChatResult:
+        """
+        生成聊天响应，并记录token使用量
+        """
+        
+        # 记录开始时间
+        start_time = time.time()
+        
+        # 调用父类生成方法
+        result = super()._generate(messages, stop, run_manager, **kwargs)
+        
+        # 记录token使用量
+        if TOKEN_TRACKING_ENABLED:
+            try:
+                self._track_token_usage(result, kwargs, start_time)
+            except Exception as e:
+                print(f"⚠️ {self.provider_name} Token追踪失败: {e}")
+        
+        return result
+    
+    def _track_token_usage(self, result: ChatResult, kwargs: Dict, start_time: float):
+        """追踪token使用量"""
+        
+        # 提取token使用信息
+        if hasattr(result, 'llm_output') and result.llm_output:
+            token_usage = result.llm_output.get('token_usage', {})
+            
+            input_tokens = token_usage.get('prompt_tokens', 0)
+            output_tokens = token_usage.get('completion_tokens', 0)
+            
+            if input_tokens > 0 or output_tokens > 0:
+                # 生成会话ID
+                session_id = kwargs.get('session_id', f"{self.provider_name}_{hash(str(kwargs))%10000}")
+                analysis_type = kwargs.get('analysis_type', 'stock_analysis')
+                
+                # 记录使用量
+                token_tracker.track_usage(
+                    provider=self.provider_name,
+                    model_name=self.model_name,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    session_id=session_id,
+                    analysis_type=analysis_type
+                )
+                
+                # 计算成本
+                cost = token_tracker.calculate_cost(
+                    provider=self.provider_name,
+                    model_name=self.model_name,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens
+                )
+                
+                # 输出使用统计
+                print(f"📊 [{self.provider_name.title()}] 实际token使用: 输入={input_tokens}, 输出={output_tokens}")
+                if cost > 0:
+                    print(f"💰 [{self.provider_name.title()}] 本次调用成本: ¥{cost:.6f}")
 
 class OpenAICompatibleBase(ChatOpenAI):
     """
@@ -194,7 +332,7 @@ class ChatDashScopeOpenAIUnified(OpenAICompatibleBase):
             provider_name="dashscope",
             model=model,
             api_key_env_var="DASHSCOPE_API_KEY",
-            base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+            base_url="https://dashscope-finance.aliyuncs.com/compatible-mode/v1",
             api_key=api_key,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -204,6 +342,16 @@ class ChatDashScopeOpenAIUnified(OpenAICompatibleBase):
 
 # 支持的OpenAI兼容模型配置
 OPENAI_COMPATIBLE_PROVIDERS = {
+    "azureopenai": {
+        "adapter_class": AzureOpenAICompatibleBase,
+        "azure_endpoint": os.getenv("AZURE_OPENAI_ENDPOINT"),
+        "api_key_env": "AZURE_OPENAI_API_KEY",
+        "models": {
+            "gpt-4.1": {"context_length": 128000, "supports_function_calling": True},
+            "o4-mini": {"context_length": 200000, "supports_function_calling": True},
+            "o1": {"context_length": 200000, "supports_function_calling": True},
+        }
+    },
     "deepseek": {
         "adapter_class": ChatDeepSeekOpenAI,
         "base_url": "https://api.deepseek.com",
@@ -215,7 +363,7 @@ OPENAI_COMPATIBLE_PROVIDERS = {
     },
     "dashscope": {
         "adapter_class": ChatDashScopeOpenAIUnified,
-        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "base_url": "https://dashscope-finance.aliyuncs.com/compatible-mode/v1",
         "api_key_env": "DASHSCOPE_API_KEY",
         "models": {
             "qwen-turbo": {"context_length": 8192, "supports_function_calling": True},
@@ -240,7 +388,7 @@ def create_openai_compatible_llm(
     创建OpenAI兼容LLM实例的统一工厂函数
     
     Args:
-        provider: 提供商名称 ("deepseek", "dashscope")
+        provider: 提供商名称 ("deepseek", "dashscope", "azureopenai")
         model: 模型名称
         api_key: API密钥
         temperature: 温度参数

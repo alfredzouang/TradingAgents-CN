@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tradingagents-cn.fullname" . }}-redis-commander
+  labels:
+    app: {{ include "tradingagents-cn.name" . }}
+    component: redis-commander
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "tradingagents-cn.name" . }}
+      component: redis-commander
+  template:
+    metadata:
+      labels:
+        app: {{ include "tradingagents-cn.name" . }}
+        component: redis-commander
+    spec:
+      containers:
+        - name: redis-commander
+          image: "{{ .Values.redisCommander.image }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.redisCommander.port }}
+          env:
+            - name: REDIS_HOSTS
+              value: "local:{{ include "tradingagents-cn.fullname" . }}-redis:6379:0:{{ .Values.redis.password }}"

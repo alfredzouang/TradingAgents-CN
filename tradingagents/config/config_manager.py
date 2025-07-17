@@ -92,7 +92,8 @@ class ConfigManager:
             "openai": "OPENAI_API_KEY",
             "google": "GOOGLE_API_KEY",
             "anthropic": "ANTHROPIC_API_KEY",
-            "deepseek": "DEEPSEEK_API_KEY"
+            "deepseek": "DEEPSEEK_API_KEY",
+            "azureopenai": "AZURE_OPENAI_API_KEY",
         }
 
         env_key = env_key_map.get(provider.lower())
@@ -179,6 +180,14 @@ class ConfigManager:
                     max_tokens=8000,
                     temperature=0.7,
                     enabled=False
+                ),
+                ModelConfig(
+                    provider="azureopenai",
+                    model_name="gpt-4.1",
+                    api_key="",
+                    max_tokens=8000,
+                    temperature=0.7,
+                    enabled=False
                 )
             ]
             self.save_models(default_models)
@@ -203,6 +212,11 @@ class ConfigManager:
                 # Google定价 (美元)
                 PricingConfig("google", "gemini-pro", 0.00025, 0.0005, "USD"),
                 PricingConfig("google", "gemini-pro-vision", 0.00025, 0.0005, "USD"),
+
+                # Azure OpenAI定价 (美元)
+                PricingConfig("azureopenai", "gpt-4.1", 0.02, 0.08, "USD"),
+                PricingConfig("azureopenai", "o4-mini", 0.011, 0.044, "USD"),
+                PricingConfig("azureopenai", "o1", 0.15, 0.6, "USD"),
             ]
             self.save_pricing(default_pricing)
         
@@ -392,6 +406,7 @@ class ConfigManager:
                 "google": bool(os.getenv("GOOGLE_API_KEY")),
                 "anthropic": bool(os.getenv("ANTHROPIC_API_KEY")),
                 "finnhub": bool(os.getenv("FINNHUB_API_KEY")),
+                "azureopenai": bool(os.getenv("AZURE_OPENAI_API_KEY")),
             },
             "other_configs": {
                 "reddit_configured": bool(os.getenv("REDDIT_CLIENT_ID") and os.getenv("REDDIT_CLIENT_SECRET")),

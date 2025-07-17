@@ -1,0 +1,16 @@
+POST https://dashscope-finance.aliyuncs.com/compatible-mode/v1/chat/completions
+HEAD Content-Type: application/json
+HEAD Authorization Bearer sk-da048e273f5e444eb9503abdbe3f2869
+{
+    "model": "qwen-plus",
+    "messages": [
+        {
+            "role": "system",
+            "content": "You are a helpful assistant."
+        },
+        {
+            "role": "user",
+            "content": "What is the capital of France?"
+        }
+    ],
+}

@@ -1,0 +1,283 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tradingagents-cn.fullname" . }}-web
+  labels:
+    app: {{ include "tradingagents-cn.name" . }}
+    component: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "tradingagents-cn.name" . }}
+      component: web
+  template:
+    metadata:
+      labels:
+        app: {{ include "tradingagents-cn.name" . }}
+        component: web
+    spec:
+      containers:
+        - name: web
+          image: "{{ .Values.web.image }}:{{ .Values.web.tag }}"
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c", "{{ .Values.web.command }}"]
+          ports:
+            - containerPort: {{ .Values.web.port }}
+          env:
+          # From ConfigMap
+          - name: DASHSCOPE_HTTP_BASE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: DASHSCOPE_HTTP_BASE_URL
+          - name: TUSHARE_ENABLED
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: TUSHARE_ENABLED
+          - name: DEFAULT_CHINA_DATA_SOURCE
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: DEFAULT_CHINA_DATA_SOURCE
+          - name: TRADINGAGENTS_RESULTS_DIR
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: TRADINGAGENTS_RESULTS_DIR
+          - name: TRADINGAGENTS_DATA_DIR
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: TRADINGAGENTS_DATA_DIR
+          - name: TRADINGAGENTS_CACHE_DIR
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: TRADINGAGENTS_CACHE_DIR
+          - name: TRADINGAGENTS_LOG_LEVEL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: TRADINGAGENTS_LOG_LEVEL
+          - name: PYTHONDONTWRITEBYTECODE
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: PYTHONDONTWRITEBYTECODE
+          - name: MONGODB_ENABLED
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: MONGODB_ENABLED
+          - name: REDIS_ENABLED
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: REDIS_ENABLED
+          - name: MONGODB_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: MONGODB_HOST
+          - name: MONGODB_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: MONGODB_PORT
+          - name: MONGODB_USERNAME
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: MONGODB_USERNAME
+          - name: MONGODB_DATABASE
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: MONGODB_DATABASE
+          - name: MONGODB_AUTH_SOURCE
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: MONGODB_AUTH_SOURCE
+          - name: REDIS_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: REDIS_HOST
+          - name: REDIS_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: REDIS_PORT
+          - name: REDIS_DB
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: REDIS_DB
+          - name: AZURE_OPENAI_ENDPOINT
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: AZURE_OPENAI_ENDPOINT
+          - name: AZURE_OPENAI_DEPLOYMENT_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: AZURE_OPENAI_DEPLOYMENT_NAME
+          - name: AZURE_OPENAI_ENABLED
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: AZURE_OPENAI_ENABLED
+          - name: DEEPSEEK_BASE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: DEEPSEEK_BASE_URL
+          - name: DEEPSEEK_ENABLED
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: DEEPSEEK_ENABLED
+          - name: REDDIT_CLIENT_ID
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: REDDIT_CLIENT_ID
+          - name: REDDIT_USER_AGENT
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: REDDIT_USER_AGENT
+          # From ConfigMap (additional keys)
+          - name: ENABLE_MONGODB
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: ENABLE_MONGODB
+          - name: ENABLE_REDIS
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: ENABLE_REDIS
+          - name: ENABLE_FALLBACK
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: ENABLE_FALLBACK
+          - name: REDIS_CACHE_TTL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: REDIS_CACHE_TTL
+          - name: MONGODB_CACHE_TTL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: MONGODB_CACHE_TTL
+          - name: MONGODB_MAX_POOL_SIZE
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: MONGODB_MAX_POOL_SIZE
+          - name: MONGODB_MIN_POOL_SIZE
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: MONGODB_MIN_POOL_SIZE
+          - name: MONGODB_MAX_IDLE_TIME
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: MONGODB_MAX_IDLE_TIME
+          - name: REDIS_MAX_CONNECTIONS
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: REDIS_MAX_CONNECTIONS
+          - name: REDIS_CONNECTION_POOL_SIZE
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: REDIS_CONNECTION_POOL_SIZE
+          - name: REDIS_SOCKET_TIMEOUT
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: REDIS_SOCKET_TIMEOUT
+          # From Secret
+          - name: DASHSCOPE_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: DASHSCOPE_API_KEY
+          - name: FINNHUB_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: FINNHUB_API_KEY
+          - name: TUSHARE_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: TUSHARE_TOKEN
+          - name: OPENAI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: OPENAI_API_KEY
+          - name: GOOGLE_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: GOOGLE_API_KEY
+          - name: ANTHROPIC_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: ANTHROPIC_API_KEY
+          - name: DEEPSEEK_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: DEEPSEEK_API_KEY
+          - name: AZURE_OPENAI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: AZURE_OPENAI_API_KEY
+          - name: MONGODB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: MONGODB_PASSWORD
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: REDIS_PASSWORD
+          - name: REDDIT_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+                key: REDDIT_CLIENT_SECRET
+          {{- range $key, $value := .Values.web.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+          {{- end }}
+          volumeMounts:
+            - name: web-code
+              mountPath: /app/web
+            - name: tradingagents-code
+              mountPath: /app/tradingagents
+            - name: scripts
+              mountPath: /app/scripts
+      volumes:
+        - name: web-code
+          emptyDir: {}
+        - name: tradingagents-code
+          emptyDir: {}
+        - name: scripts
+          emptyDir: {}

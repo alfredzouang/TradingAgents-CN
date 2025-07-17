@@ -26,7 +26,7 @@ def test_signal_processor_currency_fix():
         # 创建LLM（使用阿里百炼）
         llm = ChatOpenAI(
             model="qwen-turbo",
-            openai_api_base="https://dashscope.aliyuncs.com/compatible-mode/v1",
+            openai_api_base="https://dashscope-finance.aliyuncs.com/compatible-mode/v1",
             openai_api_key=os.getenv("DASHSCOPE_API_KEY"),
             temperature=0.1
         )

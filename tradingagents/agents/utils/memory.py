@@ -1,6 +1,6 @@
 import chromadb
 from chromadb.config import Settings
-from openai import OpenAI
+from openai import OpenAI, AzureOpenAI
 import dashscope
 from dashscope import TextEmbedding
 import os
@@ -79,7 +79,20 @@ class FinancialSituationMemory:
         self.llm_provider = config.get("llm_provider", "openai").lower()
 
         # 根据LLM提供商选择嵌入模型和客户端
-        if self.llm_provider == "dashscope" or self.llm_provider == "alibaba":
+        if self.llm_provider == "azureopenai":
+            self.embedding = "text-embedding-3-small"
+            azure_endpoint = os.getenv('AZURE_OPENAI_ENDPOINT')
+            azure_deployment = os.getenv('AZURE_OPENAI_DEPLOYMENT', 'text-embedding-3-small')
+            api_key = os.getenv('AZURE_OPENAI_API_KEY')
+            if not api_key:
+                raise ValueError("Azure OpenAI API key is not set in environment variables")
+            self.client = AzureOpenAI(
+                api_key=api_key,
+                azure_endpoint=azure_endpoint,
+                azure_deployment=azure_deployment,
+                api_version="2024-12-01-preview"
+            )
+        elif self.llm_provider == "dashscope" or self.llm_provider == "alibaba":
             self.embedding = "text-embedding-v3"
             self.client = None  # DashScope不需要OpenAI客户端
             # 设置DashScope API密钥

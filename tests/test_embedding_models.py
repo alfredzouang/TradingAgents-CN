@@ -27,7 +27,7 @@ def test_embedding_selection():
     print("📊 场景1: 阿里百炼配置")
     config1 = DEFAULT_CONFIG.copy()
     config1["llm_provider"] = "dashscope"
-    config1["backend_url"] = "https://dashscope.aliyuncs.com/api/v1"
+    config1["backend_url"] = "https://dashscope-finance.aliyuncs.com/api/v1"
     
     try:
         memory1 = FinancialSituationMemory("test_dashscope", config1)

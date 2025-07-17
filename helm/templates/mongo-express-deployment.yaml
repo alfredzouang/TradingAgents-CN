@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tradingagents-cn.fullname" . }}-mongo-express
+  labels:
+    app: {{ include "tradingagents-cn.name" . }}
+    component: mongo-express
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "tradingagents-cn.name" . }}
+      component: mongo-express
+  template:
+    metadata:
+      labels:
+        app: {{ include "tradingagents-cn.name" . }}
+        component: mongo-express
+    spec:
+      containers:
+        - name: mongo-express
+          image: "{{ .Values.mongoExpress.image }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.mongoExpress.port }}
+          env:
+            - name: ME_CONFIG_MONGODB_ADMINUSERNAME
+              value: {{ .Values.mongoExpress.adminUsername | quote }}
+            - name: ME_CONFIG_MONGODB_ADMINPASSWORD
+              value: {{ .Values.mongoExpress.adminPassword | quote }}
+            - name: ME_CONFIG_MONGODB_URL
+              value: "mongodb://{{ .Values.mongoExpress.adminUsername }}:{{ .Values.mongoExpress.adminPassword }}@{{ include "tradingagents-cn.fullname" . }}-mongodb:27017/"
+            - name: ME_CONFIG_BASICAUTH_USERNAME
+              value: {{ .Values.mongoExpress.basicAuthUsername | quote }}
+            - name: ME_CONFIG_BASICAUTH_PASSWORD
+              value: {{ .Values.mongoExpress.basicAuthPassword | quote }}

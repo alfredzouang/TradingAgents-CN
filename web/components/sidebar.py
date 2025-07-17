@@ -15,12 +15,13 @@ def render_sidebar():
         # LLM提供商选择
         llm_provider = st.selectbox(
             "LLM提供商",
-            options=["dashscope", "deepseek", "google"],
-            index=0,
+            options=["dashscope", "deepseek", "google", "azureopenai"],
+            index=3,
             format_func=lambda x: {
                 "dashscope": "阿里百炼",
                 "deepseek": "DeepSeek V3",
-                "google": "Google AI"
+                "google": "Google AI",
+                "azureopenai": "Azure OpenAI"
             }[x],
             help="选择AI模型提供商"
         )
@@ -48,7 +49,7 @@ def render_sidebar():
                 }[x],
                 help="选择用于分析的DeepSeek模型"
             )
-        else:  # google
+        elif llm_provider == "google":  # google
             llm_model = st.selectbox(
                 "选择Google模型",
                 options=["gemini-2.0-flash", "gemini-1.5-pro", "gemini-1.5-flash"],
@@ -60,7 +61,17 @@ def render_sidebar():
                 }[x],
                 help="选择用于分析的Google Gemini模型"
             )
-        
+        elif llm_provider == "azureopenai":  # azureopenai
+            llm_model = st.selectbox(
+                "选择Azure OpenAI模型",
+                options=["o1", "o4-mini"],
+                index=0,
+                format_func=lambda x: {
+                    "o1": "O1 - 强大性能",
+                    "o4-mini": "O4 Mini - 快速响应"
+                }[x],
+                help="选择用于分析的Azure OpenAI模型"
+            )
         # 高级设置
         with st.expander("⚙️ 高级设置"):
             enable_memory = st.checkbox(
@@ -189,7 +200,13 @@ def render_sidebar():
                 st.success(f"✅ Anthropic: {status}")
             elif level == "warning":
                 st.warning(f"⚠️ Anthropic: {status}")
-
+        azure_openai_key = os.getenv("AZURE_OPENAI_API_KEY")
+        if azure_openai_key and azure_openai_key != "your_azure_openai_api_key_here":
+            status, level = validate_api_key(azure_openai_key, "azureopenai")
+            if level == "success":
+                st.success(f"✅ Azure OpenAI: {status}")
+            elif level == "warning":
+                st.warning(f"⚠️ Azure OpenAI: {status}")
         st.markdown("---")
 
         # 系统信息

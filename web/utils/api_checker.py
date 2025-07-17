@@ -13,13 +13,14 @@ def check_api_keys():
     openai_key = os.getenv("OPENAI_API_KEY")
     anthropic_key = os.getenv("ANTHROPIC_API_KEY")
     google_key = os.getenv("GOOGLE_API_KEY")
-    
+    azure_openai_key = os.getenv("AZURE_OPENAI_API_KEY")
+
     # 构建详细状态
     details = {
         "DASHSCOPE_API_KEY": {
             "configured": bool(dashscope_key),
             "display": f"{dashscope_key[:12]}..." if dashscope_key else "未配置",
-            "required": True,
+            "required": False,
             "description": "阿里百炼API密钥"
         },
         "FINNHUB_API_KEY": {
@@ -45,6 +46,12 @@ def check_api_keys():
             "display": f"{google_key[:12]}..." if google_key else "未配置",
             "required": False,
             "description": "Google AI API密钥"
+        },
+        "AZURE_OPENAI_API_KEY": {
+            "configured": bool(azure_openai_key),
+            "display": f"{azure_openai_key[:12]}..." if azure_openai_key else "未配置",
+            "required": True,
+            "description": "Azure OpenAI API密钥"
         }
     }
     

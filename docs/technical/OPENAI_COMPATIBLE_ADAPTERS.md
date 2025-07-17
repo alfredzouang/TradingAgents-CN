@@ -44,7 +44,7 @@ class ChatDashScopeOpenAI(OpenAICompatibleBase):
         super().__init__(
             provider_name="dashscope",
             api_key_env_var="DASHSCOPE_API_KEY",
-            base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+            base_url="https://dashscope-finance.aliyuncs.com/compatible-mode/v1",
             **kwargs
         )
 

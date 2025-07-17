@@ -24,7 +24,7 @@ class ChatDashScopeOpenAI(ChatOpenAI):
         """初始化 DashScope OpenAI 兼容客户端"""
         
         # 设置 DashScope OpenAI 兼容接口的默认配置
-        kwargs.setdefault("base_url", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+        kwargs.setdefault("base_url", "https://dashscope-finance.aliyuncs.com/compatible-mode/v1")
         kwargs.setdefault("api_key", os.getenv("DASHSCOPE_API_KEY"))
         kwargs.setdefault("model", "qwen-turbo")
         kwargs.setdefault("temperature", 0.1)

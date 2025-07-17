@@ -1,0 +1,6 @@
+apiVersion: v2
+name: tradingagents-cn
+description: A Helm chart for deploying TradingAgents-CN and its dependencies
+type: application
+version: 0.1.0
+appVersion: "latest"

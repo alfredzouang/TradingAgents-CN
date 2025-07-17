@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "tradingagents-cn.fullname" . }}-mongodb-pvc
+  labels:
+    app: {{ include "tradingagents-cn.name" . }}
+    component: mongodb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.mongodb.volumeSize }}
