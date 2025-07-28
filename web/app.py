@@ -12,6 +12,9 @@ import datetime
 import time
 from dotenv import load_dotenv
 
+import yaml
+import streamlit_authenticator as stauth
+
 # 添加项目根目录到Python路径
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
@@ -168,6 +171,37 @@ def main():
 
     # 初始化会话状态
     initialize_session_state()
+
+    # === Streamlit Authenticator: 加载配置并初始化认证 ===
+    config_path = Path(__file__).parent / "config.yaml"
+    with open(config_path, "r") as file:
+        config = yaml.safe_load(file)
+
+    authenticator = stauth.Authenticate(
+        config['credentials'],
+        config['cookie']['name'],
+        config['cookie']['key'],
+        config['cookie']['expiry_days']
+    )
+
+    try:
+        authenticator.login()
+    except Exception as e:
+        st.error(e)
+
+    # 认证状态检查
+    if st.session_state.get('authentication_status'):
+        authenticator.logout()
+        st.success(f'欢迎 *{st.session_state.get("name", st.session_state.get("username", ""))}*，您已成功登录。')
+    elif st.session_state.get('authentication_status') is False:
+        st.error('用户名或密码错误')
+        return
+    elif st.session_state.get('authentication_status') is None:
+        st.warning('请输入用户名和密码')
+        return
+
+    # === END Streamlit Authenticator ===
+
 
     # 自定义CSS - 调整侧边栏宽度
     st.markdown("""

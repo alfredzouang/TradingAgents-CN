@@ -20,7 +20,7 @@ spec:
       containers:
         - name: web
           image: "{{ .Values.web.image }}:{{ .Values.web.tag }}"
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           command: ["/bin/sh", "-c", "{{ .Values.web.command }}"]
           ports:
             - containerPort: {{ .Values.web.port }}
@@ -267,17 +267,5 @@ spec:
           - name: {{ $key }}
             value: {{ $value | quote }}
           {{- end }}
-          volumeMounts:
-            - name: web-code
-              mountPath: /app/web
-            - name: tradingagents-code
-              mountPath: /app/tradingagents
-            - name: scripts
-              mountPath: /app/scripts
-      volumes:
-        - name: web-code
-          emptyDir: {}
-        - name: tradingagents-code
-          emptyDir: {}
-        - name: scripts
-          emptyDir: {}
+          # volumeMounts removed: code and scripts now come from the image
+      # volumes removed: code and scripts now come from the image

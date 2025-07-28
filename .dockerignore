@@ -1,8 +1,5 @@
-# Ignore Python cache and virtual environments
+# Python cache and virtual environments
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
 *.pyc
 *.pyo
 *.pyd
@@ -14,53 +11,40 @@ ENV/
 env.bak/
 venv.bak/
 
-# Ignore Jupyter Notebook checkpoints
+# Jupyter Notebook checkpoints
 .ipynb_checkpoints
 
-# Ignore local data, logs, and outputs
+# Local data, logs, and outputs
 data/
 logs/
 *.log
 
-# Ignore OS files
+# OS files
 .DS_Store
 Thumbs.db
 
-# Ignore git and version control
+# Git and version control
 .git/
 .gitignore
 
-# Ignore editor/project files
+# Editor/project files
 .vscode/
 .idea/
 *.swp
 
-# Ignore test and example outputs
+# Test and example outputs
 tests/
 examples/
 
-# Ignore build artifacts
+# Build artifacts
 build/
 dist/
 *.egg-info/
 
-# Ignore Docker-related files that shouldn't be in the image
+# Docker-related files that shouldn't be in the image
 docker-compose.yml
-.dockerignore
 
-# Ignore other files you don't want in the image
-*.pdf
-*.md
-*.rst
-*.yml
-*.yaml
-*.sh
-*.bat
-*.ps1
-
-# Allow scripts needed for container
+# Allow all source code and yaml files (do NOT exclude *.py, *.sh, *.md, *.yml, *.yaml)
+# Allow scripts and helm chart
 !scripts/
-!scripts/*.py
-
-# Allow helm chart for deployment (if needed in image)
 !helm/

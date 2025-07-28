@@ -1,40 +1,65 @@
-FROM ghcr.io/astral-sh/uv:python3.10-bookworm
+# ----------- Builder Stage -----------
+FROM python:3.10-bullseye AS builder
 
 WORKDIR /app
 
-RUN mkdir -p /app/data /app/logs
+# Install build dependencies and runtime system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        wkhtmltopdf \
+        xvfb \
+        fonts-wqy-zenhei \
+        fonts-wqy-microhei \
+        fonts-liberation \
+        pandoc \
+        procps \
+        curl \
+        ca-certificates
+
+# Install Python dependencies in a clean target directory
+COPY requirements.txt .
+RUN pip install --upgrade pip && \
+    pip install --prefix=/install --no-cache-dir -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple
+
+# Copy application code (for possible build steps, e.g. static assets)
+COPY . .
+
+# ----------- Final Stage -----------
+FROM python:3.10-slim AS final
+
+WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app
 
-RUN echo 'deb http://mirrors.aliyun.com/debian/ bookworm main' > /etc/apt/sources.list && \
-    echo 'deb-src http://mirrors.aliyun.com/debian/ bookworm main' >> /etc/apt/sources.list && \
-    echo 'deb http://mirrors.aliyun.com/debian/ bookworm-updates main' >> /etc/apt/sources.list && \
-    echo 'deb-src http://mirrors.aliyun.com/debian/ bookworm-updates main' >> /etc/apt/sources.list && \
-    echo 'deb http://mirrors.aliyun.com/debian-security bookworm-security main' >> /etc/apt/sources.list && \
-    echo 'deb-src http://mirrors.aliyun.com/debian-security bookworm-security main' >> /etc/apt/sources.list
+# Install only runtime system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        wkhtmltopdf \
+        xvfb \
+        fonts-wqy-zenhei \
+        fonts-wqy-microhei \
+        fonts-liberation \
+        pandoc \
+        procps \
+        curl \
+        ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    wkhtmltopdf \
-    xvfb \
-    fonts-wqy-zenhei \
-    fonts-wqy-microhei \
-    fonts-liberation \
-    pandoc \
-    procps \
-    && rm -rf /var/lib/apt/lists/*
+# Copy installed Python packages from builder
+COPY --from=builder /install /usr/local
 
-# 启动Xvfb虚拟显示器
+# Copy application code (ensure all source is present)
+COPY --from=builder /app /app
+
+# Xvfb startup script
 RUN echo '#!/bin/bash\nXvfb :99 -screen 0 1024x768x24 -ac +extension GLX &\nexport DISPLAY=:99\nexec "$@"' > /usr/local/bin/start-xvfb.sh \
     && chmod +x /usr/local/bin/start-xvfb.sh
 
-COPY requirements.txt .
-
-RUN pip install --no-cache-dir -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple
-
-COPY . .
+RUN find /app
 
 EXPOSE 8501
 
-CMD ["python", "-m", "streamlit", "run", "web/app.py", "--server.address=0.0.0.0", "--server.port=8501"]
+CMD ["bash", "-c", "export PYTHONPATH=/app && python -m streamlit run web/app.py --server.address=0.0.0.0 --server.port=8501"]

@@ -1,4 +1,5 @@
 #!/bin/bash
+# NOTE: This script requires bash. Do NOT run with 'sh', use 'bash ./scripts/deploy_to_k8s.sh' or make it executable and run './scripts/deploy_to_k8s.sh'.
 # Build, push Docker image, create env ConfigMap from .env, and deploy TradingAgents-CN Helm chart to Kubernetes
 
 set -e
@@ -83,44 +84,19 @@ else
   REGISTRY_URL="$IMAGE_REPO"
 fi
 
-# Check if image with tag exists in registry
-IMAGE_EXISTS=false
-if [[ "$IMAGE_REPO" == "tradingaz.azurecr.io" ]]; then
-  if command -v az >/dev/null 2>&1; then
-    EXISTING_TAGS=$(az acr repository show-tags --name tradingaz --repository "$IMAGE_NAME" --output tsv 2>/dev/null || true)
-    for tag in $EXISTING_TAGS; do
-      if [[ "$tag" == "$IMAGE_TAG" ]]; then
-        IMAGE_EXISTS=true
-        break
-      fi
-    done
-  fi
-elif [[ "$IMAGE_REPO" == "docker.io" ]]; then
-  # Docker Hub check (public images only)
-  REPO_PATH="$REGISTRY_USER/$IMAGE_NAME"
-  HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://hub.docker.com/v2/repositories/$REPO_PATH/tags/$IMAGE_TAG/")
-  if [[ "$HTTP_STATUS" == "200" ]]; then
-    IMAGE_EXISTS=true
-  fi
+echo "Building Docker image: $FULL_IMAGE_NAME"
+PROJECT_ROOT="$PWD"
+docker build --progress=plain --platform=linux/amd64 -t "$FULL_IMAGE_NAME" -f "$DOCKERFILE" "$PROJECT_ROOT"
+
+if [[ -n "$REGISTRY_USER" && -n "$REGISTRY_PASS" ]]; then
+  echo "Logging in to registry $REGISTRY_URL"
+  echo "$REGISTRY_PASS" | docker login "$REGISTRY_URL" -u "$REGISTRY_USER" --password-stdin
 fi
 
-if [[ "$IMAGE_EXISTS" == "true" ]]; then
-  echo "Image $FULL_IMAGE_NAME already exists in registry, skipping build and push."
-else
-  echo "Building Docker image: $FULL_IMAGE_NAME"
-  PROJECT_ROOT="$PWD"
-  docker build --no-cache --platform=linux/amd64 -t "$FULL_IMAGE_NAME" -f "$DOCKERFILE" "$PROJECT_ROOT"
+echo "Pushing Docker image: $FULL_IMAGE_NAME"
+docker push "$FULL_IMAGE_NAME"
 
-  if [[ -n "$REGISTRY_USER" && -n "$REGISTRY_PASS" ]]; then
-    echo "Logging in to registry $REGISTRY_URL"
-    echo "$REGISTRY_PASS" | docker login "$REGISTRY_URL" -u "$REGISTRY_USER" --password-stdin
-  fi
-
-  echo "Pushing Docker image: $FULL_IMAGE_NAME"
-  docker push "$FULL_IMAGE_NAME"
-
-  echo "Image pushed: $FULL_IMAGE_NAME"
-fi
+echo "Image pushed: $FULL_IMAGE_NAME"
 
 # Create env ConfigMap from .env (excluding sensitive keys)
 CONFIGMAP_NAME="${RELEASE_NAME}-env"
@@ -169,6 +145,7 @@ fi
 
 # Deploy with Helm, passing image repo/tag
 echo "Deploying $RELEASE_NAME to namespace $NAMESPACE using values file $VALUES_FILE"
+
 helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
   -n "$NAMESPACE" \
   -f "$VALUES_FILE" \

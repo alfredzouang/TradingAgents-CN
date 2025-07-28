@@ -1,0 +1,19 @@
+cookie:
+  expiry_days: 30
+  key: "supersecretkey"
+  name: "streamlit_auth"
+credentials:
+  usernames:
+    alfred_zou:
+      email: richardeee@gmail.com
+      failed_login_attempts: 0
+      first_name: Alfred
+      last_name: Zou
+      logged_in: False
+      password: Qaz12345
+      roles:
+        - admin
+oauth2: {}
+pre-authorized:
+  emails: []
+api_key:

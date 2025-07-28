@@ -4,3 +4,8 @@ description: A Helm chart for deploying TradingAgents-CN and its dependencies
 type: application
 version: 0.1.0
 appVersion: "latest"
+
+dependencies:
+  - name: etcd
+    version: 10.7.2
+    repository: https://charts.bitnami.com/bitnami

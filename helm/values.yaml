@@ -3,7 +3,7 @@ web:
   tag: latest
   port: 8501
   service:
-    type: LoadBalancer
+    type: ClusterIP
   env:
     PYTHONUNBUFFERED: "1"
     PYTHONDONTWRITEBYTECODE: "1"
@@ -49,6 +49,7 @@ mongoExpress:
   adminPassword: tradingagents123
   basicAuthUsername: admin
   basicAuthPassword: tradingagents123
+  etcdHost: "tradingagents-cn-etcd:2379"
 
 persistence:
   enabled: true
@@ -68,3 +69,13 @@ env:
   MONGODB_PASSWORD: ""
   REDIS_PASSWORD: ""
   REDDIT_CLIENT_SECRET: ""
+
+# Configuration for the Bitnami etcd subchart
+etcd:
+  enabled: true
+  replicaCount: 1
+  auth:
+    rbac:
+      enabled: false
+      rootPassword: "changeme"
+  # Add more etcd settings here as needed

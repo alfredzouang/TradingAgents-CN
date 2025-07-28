@@ -35,3 +35,10 @@ pymongo  # MongoDB数据库支持，用于Token使用记录存储
 markdown>=3.4.0  # Markdown处理，用于报告生成
 pypandoc>=1.11  # 文档格式转换，用于导出报告功能
 python-dotenv>=1.0.0  # 环境变量管理，用于.env文件解析
+streamlit-authenticator==0.4.2
+bcrypt==3.1.7
+captcha==0.5.0
+cryptography==42.0.5
+extra-streamlit-components==0.1.70
+PyJWT==2.3.0
+PyYAML==5.3.1
