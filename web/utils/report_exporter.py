@@ -14,6 +14,10 @@ from typing import Dict, Any, Optional
 import tempfile
 import base64
 
+# 导入日志模块
+from tradingagents.utils.logging_manager import get_logger
+logger = get_logger('web')
+
 # 配置日志 - 确保输出到stdout以便Docker logs可见
 logging.basicConfig(
     level=logging.INFO,
@@ -35,7 +39,7 @@ try:
     DOCKER_ADAPTER_AVAILABLE = True
 except ImportError:
     DOCKER_ADAPTER_AVAILABLE = False
-    print("⚠️ Docker适配器不可用")
+    logger.warning(f"⚠️ Docker适配器不可用")
 
 # 导入导出相关库
 try:
@@ -53,13 +57,13 @@ try:
         pypandoc.get_pandoc_version()
         PANDOC_AVAILABLE = True
     except OSError:
-        print("⚠️ 未找到pandoc，正在尝试自动下载...")
+        logger.warning(f"⚠️ 未找到pandoc，正在尝试自动下载...")
         try:
             pypandoc.download_pandoc()
             PANDOC_AVAILABLE = True
-            print("✅ pandoc下载成功！")
+            logger.info(f"✅ pandoc下载成功！")
         except Exception as download_error:
-            print(f"❌ pandoc下载失败: {download_error}")
+            logger.error(f"❌ pandoc下载失败: {download_error}")
             PANDOC_AVAILABLE = False
 
     EXPORT_AVAILABLE = True
@@ -67,8 +71,8 @@ try:
 except ImportError as e:
     EXPORT_AVAILABLE = False
     PANDOC_AVAILABLE = False
-    print(f"导出功能依赖包缺失: {e}")
-    print("请安装: pip install pypandoc markdown")
+    logger.info(f"导出功能依赖包缺失: {e}")
+    logger.info(f"请安装: pip install pypandoc markdown")
 
 
 class ReportExporter:
@@ -89,7 +93,7 @@ class ReportExporter:
         # Docker环境初始化
         if self.is_docker:
             logger.info("🐳 检测到Docker环境，初始化PDF支持...")
-            print("🐳 检测到Docker环境，初始化PDF支持...")
+            logger.info(f"🐳 检测到Docker环境，初始化PDF支持...")
             setup_xvfb_display()
     
     def _clean_text_for_markdown(self, text: str) -> str:
@@ -359,11 +363,11 @@ class ReportExporter:
                 # 如果指定了引擎，添加引擎参数
                 if engine:
                     extra_args.append(f'--pdf-engine={engine}')
-                    print(f"🔧 使用PDF引擎: {engine}")
+                    logger.info(f"🔧 使用PDF引擎: {engine}")
                 else:
-                    print("🔧 使用默认PDF引擎")
+                    logger.info(f"🔧 使用默认PDF引擎")
 
-                print(f"🔧 PDF参数: {extra_args}")
+                logger.info(f"🔧 PDF参数: {extra_args}")
 
                 # 清理内容避免YAML解析问题（与Word导出一致）
                 cleaned_content = self._clean_markdown_for_pandoc(md_content)
@@ -386,14 +390,14 @@ class ReportExporter:
                     # 清理临时文件
                     os.unlink(output_file)
 
-                    print(f"✅ PDF生成成功，使用引擎: {engine or '默认'}")
+                    logger.info(f"✅ PDF生成成功，使用引擎: {engine or '默认'}")
                     return pdf_content
                 else:
                     raise Exception("PDF文件生成失败或为空")
 
             except Exception as e:
                 last_error = str(e)
-                print(f"PDF引擎 {engine or '默认'} 失败: {e}")
+                logger.error(f"PDF引擎 {engine or '默认'} 失败: {e}")
 
                 # 清理可能存在的临时文件
                 try:
@@ -480,6 +484,181 @@ class ReportExporter:
 report_exporter = ReportExporter()
 
 
+def save_modular_reports_to_results_dir(results: Dict[str, Any], stock_symbol: str) -> Dict[str, str]:
+    """保存分模块报告到results目录（CLI版本格式）"""
+    try:
+        import os
+        from pathlib import Path
+
+        # 获取项目根目录
+        current_file = Path(__file__)
+        project_root = current_file.parent.parent.parent
+
+        # 获取results目录配置
+        results_dir_env = os.getenv("TRADINGAGENTS_RESULTS_DIR")
+        if results_dir_env:
+            if not os.path.isabs(results_dir_env):
+                results_dir = project_root / results_dir_env
+            else:
+                results_dir = Path(results_dir_env)
+        else:
+            results_dir = project_root / "results"
+
+        # 创建股票专用目录
+        analysis_date = datetime.now().strftime('%Y-%m-%d')
+        stock_dir = results_dir / stock_symbol / analysis_date
+        reports_dir = stock_dir / "reports"
+        reports_dir.mkdir(parents=True, exist_ok=True)
+
+        # 创建message_tool.log文件
+        log_file = stock_dir / "message_tool.log"
+        log_file.touch(exist_ok=True)
+
+        state = results.get('state', {})
+        saved_files = {}
+
+        # 定义报告模块映射（与CLI版本保持一致）
+        report_modules = {
+            'market_report': {
+                'filename': 'market_report.md',
+                'title': f'{stock_symbol} 股票技术分析报告',
+                'state_key': 'market_report'
+            },
+            'sentiment_report': {
+                'filename': 'sentiment_report.md',
+                'title': f'{stock_symbol} 市场情绪分析报告',
+                'state_key': 'sentiment_report'
+            },
+            'news_report': {
+                'filename': 'news_report.md',
+                'title': f'{stock_symbol} 新闻事件分析报告',
+                'state_key': 'news_report'
+            },
+            'fundamentals_report': {
+                'filename': 'fundamentals_report.md',
+                'title': f'{stock_symbol} 基本面分析报告',
+                'state_key': 'fundamentals_report'
+            },
+            'investment_plan': {
+                'filename': 'investment_plan.md',
+                'title': f'{stock_symbol} 投资决策报告',
+                'state_key': 'investment_plan'
+            },
+            'trader_investment_plan': {
+                'filename': 'trader_investment_plan.md',
+                'title': f'{stock_symbol} 交易计划报告',
+                'state_key': 'trader_investment_plan'
+            },
+            'final_trade_decision': {
+                'filename': 'final_trade_decision.md',
+                'title': f'{stock_symbol} 最终投资决策',
+                'state_key': 'final_trade_decision'
+            }
+        }
+
+        # 生成各个模块的报告文件
+        for module_key, module_info in report_modules.items():
+            content = state.get(module_info['state_key'])
+
+            if content:
+                # 生成模块报告内容
+                if isinstance(content, str):
+                    report_content = f"# {module_info['title']}\n\n{content}"
+                elif isinstance(content, dict):
+                    report_content = f"# {module_info['title']}\n\n"
+                    for sub_key, sub_value in content.items():
+                        report_content += f"## {sub_key.replace('_', ' ').title()}\n\n{sub_value}\n\n"
+                else:
+                    report_content = f"# {module_info['title']}\n\n{str(content)}"
+
+                # 保存文件
+                file_path = reports_dir / module_info['filename']
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(report_content)
+
+                saved_files[module_key] = str(file_path)
+                logger.info(f"✅ 保存模块报告: {file_path}")
+
+        # 如果有决策信息，也保存最终决策报告
+        decision = results.get('decision', {})
+        if decision:
+            decision_content = f"# {stock_symbol} 最终投资决策\n\n"
+
+            if isinstance(decision, dict):
+                decision_content += f"## 投资建议\n\n"
+                decision_content += f"**行动**: {decision.get('action', 'N/A')}\n\n"
+                decision_content += f"**置信度**: {decision.get('confidence', 0):.1%}\n\n"
+                decision_content += f"**风险评分**: {decision.get('risk_score', 0):.1%}\n\n"
+                decision_content += f"**目标价位**: {decision.get('target_price', 'N/A')}\n\n"
+                decision_content += f"## 分析推理\n\n{decision.get('reasoning', '暂无分析推理')}\n\n"
+            else:
+                decision_content += f"{str(decision)}\n\n"
+
+            decision_file = reports_dir / "final_trade_decision.md"
+            with open(decision_file, 'w', encoding='utf-8') as f:
+                f.write(decision_content)
+
+            saved_files['final_trade_decision'] = str(decision_file)
+            logger.info(f"✅ 保存最终决策: {decision_file}")
+
+        logger.info(f"✅ 分模块报告保存完成，共保存 {len(saved_files)} 个文件")
+        logger.info(f"📁 保存目录: {reports_dir}")
+
+        return saved_files
+
+    except Exception as e:
+        logger.error(f"❌ 保存分模块报告失败: {e}")
+        import traceback
+        logger.error(f"❌ 详细错误: {traceback.format_exc()}")
+        return {}
+
+
+def save_report_to_results_dir(content: bytes, filename: str, stock_symbol: str) -> str:
+    """保存报告到results目录"""
+    try:
+        import os
+        from pathlib import Path
+
+        # 获取项目根目录（Web应用在web/子目录中运行）
+        current_file = Path(__file__)
+        project_root = current_file.parent.parent.parent  # web/utils/report_exporter.py -> 项目根目录
+
+        # 获取results目录配置
+        results_dir_env = os.getenv("TRADINGAGENTS_RESULTS_DIR")
+        if results_dir_env:
+            # 如果环境变量是相对路径，相对于项目根目录解析
+            if not os.path.isabs(results_dir_env):
+                results_dir = project_root / results_dir_env
+            else:
+                results_dir = Path(results_dir_env)
+        else:
+            # 默认使用项目根目录下的results
+            results_dir = project_root / "results"
+
+        # 创建股票专用目录
+        analysis_date = datetime.now().strftime('%Y-%m-%d')
+        stock_dir = results_dir / stock_symbol / analysis_date / "reports"
+        stock_dir.mkdir(parents=True, exist_ok=True)
+
+        # 保存文件
+        file_path = stock_dir / filename
+        with open(file_path, 'wb') as f:
+            f.write(content)
+
+        logger.info(f"✅ 报告已保存到: {file_path}")
+        logger.info(f"📁 项目根目录: {project_root}")
+        logger.info(f"📁 Results目录: {results_dir}")
+        logger.info(f"📁 环境变量TRADINGAGENTS_RESULTS_DIR: {results_dir_env}")
+
+        return str(file_path)
+
+    except Exception as e:
+        logger.error(f"❌ 保存报告到results目录失败: {e}")
+        import traceback
+        logger.error(f"❌ 详细错误: {traceback.format_exc()}")
+        return ""
+
+
 def render_export_buttons(results: Dict[str, Any]):
     """渲染导出按钮"""
 
@@ -525,6 +704,7 @@ def render_export_buttons(results: Dict[str, Any]):
             **或者使用Python自动下载:**
             ```python
             import pypandoc
+
             pypandoc.download_pandoc()
             ```
             """)
@@ -540,13 +720,34 @@ def render_export_buttons(results: Dict[str, Any]):
     
     with col1:
         if st.button("📄 导出 Markdown", help="导出为Markdown格式"):
-            print(f"🖱️ [EXPORT] 用户点击Markdown导出按钮 - 股票: {stock_symbol}")
+            logger.info(f"🖱️ [EXPORT] 用户点击Markdown导出按钮 - 股票: {stock_symbol}")
             logger.info(f"🖱️ 用户点击Markdown导出按钮 - 股票: {stock_symbol}")
+            # 1. 保存分模块报告（CLI格式）
+            logger.info("📁 开始保存分模块报告（CLI格式）...")
+            modular_files = save_modular_reports_to_results_dir(results, stock_symbol)
+
+            # 2. 生成汇总报告（下载用）
             content = report_exporter.export_report(results, 'markdown')
             if content:
                 filename = f"{stock_symbol}_analysis_{timestamp}.md"
-                print(f"✅ [EXPORT] Markdown导出成功，文件名: {filename}")
+                logger.info(f"✅ [EXPORT] Markdown导出成功，文件名: {filename}")
                 logger.info(f"✅ Markdown导出成功，文件名: {filename}")
+
+                # 3. 保存汇总报告到results目录
+                saved_path = save_report_to_results_dir(content, filename, stock_symbol)
+
+                # 4. 显示保存结果
+                if modular_files and saved_path:
+                    st.success(f"✅ 已保存 {len(modular_files)} 个分模块报告 + 1个汇总报告")
+                    with st.expander("📁 查看保存的文件"):
+                        st.write("**分模块报告:**")
+                        for module, path in modular_files.items():
+                            st.write(f"- {module}: `{path}`")
+                        st.write("**汇总报告:**")
+                        st.write(f"- 汇总报告: `{saved_path}`")
+                elif saved_path:
+                    st.success(f"✅ 汇总报告已保存到: {saved_path}")
+
                 st.download_button(
                     label="📥 下载 Markdown",
                     data=content,
@@ -554,23 +755,46 @@ def render_export_buttons(results: Dict[str, Any]):
                     mime="text/markdown"
                 )
             else:
-                print(f"❌ [EXPORT] Markdown导出失败，content为空")
+                logger.error(f"❌ [EXPORT] Markdown导出失败，content为空")
                 logger.error("❌ Markdown导出失败，content为空")
     
     with col2:
         if st.button("📝 导出 Word", help="导出为Word文档格式"):
-            print(f"🖱️ [EXPORT] 用户点击Word导出按钮 - 股票: {stock_symbol}")
+            logger.info(f"🖱️ [EXPORT] 用户点击Word导出按钮 - 股票: {stock_symbol}")
             logger.info(f"🖱️ 用户点击Word导出按钮 - 股票: {stock_symbol}")
             with st.spinner("正在生成Word文档，请稍候..."):
                 try:
-                    print(f"🔄 [EXPORT] 开始Word导出流程...")
+                    logger.info(f"🔄 [EXPORT] 开始Word导出流程...")
                     logger.info("🔄 开始Word导出流程...")
+
+                    # 1. 保存分模块报告（CLI格式）
+                    logger.info("📁 开始保存分模块报告（CLI格式）...")
+                    modular_files = save_modular_reports_to_results_dir(results, stock_symbol)
+
+                    # 2. 生成Word汇总报告
                     content = report_exporter.export_report(results, 'docx')
                     if content:
                         filename = f"{stock_symbol}_analysis_{timestamp}.docx"
-                        print(f"✅ [EXPORT] Word导出成功，文件名: {filename}, 大小: {len(content)} 字节")
+                        logger.info(f"✅ [EXPORT] Word导出成功，文件名: {filename}, 大小: {len(content)} 字节")
                         logger.info(f"✅ Word导出成功，文件名: {filename}, 大小: {len(content)} 字节")
-                        st.success("✅ Word文档生成成功！")
+
+                        # 3. 保存Word汇总报告到results目录
+                        saved_path = save_report_to_results_dir(content, filename, stock_symbol)
+
+                        # 4. 显示保存结果
+                        if modular_files and saved_path:
+                            st.success(f"✅ 已保存 {len(modular_files)} 个分模块报告 + 1个Word汇总报告")
+                            with st.expander("📁 查看保存的文件"):
+                                st.write("**分模块报告:**")
+                                for module, path in modular_files.items():
+                                    st.write(f"- {module}: `{path}`")
+                                st.write("**Word汇总报告:**")
+                                st.write(f"- Word报告: `{saved_path}`")
+                        elif saved_path:
+                            st.success(f"✅ Word文档已保存到: {saved_path}")
+                        else:
+                            st.success("✅ Word文档生成成功！")
+
                         st.download_button(
                             label="📥 下载 Word",
                             data=content,
@@ -578,11 +802,11 @@ def render_export_buttons(results: Dict[str, Any]):
                             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                         )
                     else:
-                        print(f"❌ [EXPORT] Word导出失败，content为空")
+                        logger.error(f"❌ [EXPORT] Word导出失败，content为空")
                         logger.error("❌ Word导出失败，content为空")
                         st.error("❌ Word文档生成失败")
                 except Exception as e:
-                    print(f"❌ [EXPORT] Word导出异常: {str(e)}")
+                    logger.error(f"❌ [EXPORT] Word导出异常: {str(e)}")
                     logger.error(f"❌ Word导出异常: {str(e)}", exc_info=True)
                     st.error(f"❌ Word文档生成失败: {str(e)}")
 
@@ -617,11 +841,34 @@ def render_export_buttons(results: Dict[str, Any]):
             with st.spinner("正在生成PDF，请稍候..."):
                 try:
                     logger.info("🔄 开始PDF导出流程...")
+
+                    # 1. 保存分模块报告（CLI格式）
+                    logger.info("📁 开始保存分模块报告（CLI格式）...")
+                    modular_files = save_modular_reports_to_results_dir(results, stock_symbol)
+
+                    # 2. 生成PDF汇总报告
                     content = report_exporter.export_report(results, 'pdf')
                     if content:
                         filename = f"{stock_symbol}_analysis_{timestamp}.pdf"
                         logger.info(f"✅ PDF导出成功，文件名: {filename}, 大小: {len(content)} 字节")
-                        st.success("✅ PDF生成成功！")
+
+                        # 3. 保存PDF汇总报告到results目录
+                        saved_path = save_report_to_results_dir(content, filename, stock_symbol)
+
+                        # 4. 显示保存结果
+                        if modular_files and saved_path:
+                            st.success(f"✅ 已保存 {len(modular_files)} 个分模块报告 + 1个PDF汇总报告")
+                            with st.expander("📁 查看保存的文件"):
+                                st.write("**分模块报告:**")
+                                for module, path in modular_files.items():
+                                    st.write(f"- {module}: `{path}`")
+                                st.write("**PDF汇总报告:**")
+                                st.write(f"- PDF报告: `{saved_path}`")
+                        elif saved_path:
+                            st.success(f"✅ PDF已保存到: {saved_path}")
+                        else:
+                            st.success("✅ PDF生成成功！")
+
                         st.download_button(
                             label="📥 下载 PDF",
                             data=content,

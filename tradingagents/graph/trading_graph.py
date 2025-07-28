@@ -16,6 +16,13 @@ from langgraph.prebuilt import ToolNode
 from tradingagents.agents import *
 from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.agents.utils.memory import FinancialSituationMemory
+
+# 导入统一日志系统
+from tradingagents.utils.logging_init import get_logger
+
+# 导入日志模块
+from tradingagents.utils.logging_manager import get_logger
+logger = get_logger('agents')
 from tradingagents.agents.utils.agent_states import (
     AgentState,
     InvestDebateState,
@@ -59,6 +66,7 @@ class TradingAgentsGraph:
         )
 
         # Initialize LLMs
+<<<<<<< HEAD
         if self.config["llm_provider"].lower() == "azureopenai":
             self.deep_thinking_llm = AzureChatOpenAI(
                 azure_deployment=self.config["deep_think_llm"],
@@ -71,6 +79,30 @@ class TradingAgentsGraph:
                 api_version="2024-12-01-preview"
             )
         elif self.config["llm_provider"].lower() == "openai" or self.config["llm_provider"] == "ollama" or self.config["llm_provider"] == "openrouter":
+=======
+        if self.config["llm_provider"].lower() == "openai":
+            self.deep_thinking_llm = ChatOpenAI(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
+            self.quick_thinking_llm = ChatOpenAI(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])
+        elif self.config["llm_provider"] == "openrouter":
+            # OpenRouter支持：优先使用OPENROUTER_API_KEY，否则使用OPENAI_API_KEY
+            openrouter_api_key = os.getenv('OPENROUTER_API_KEY') or os.getenv('OPENAI_API_KEY')
+            if not openrouter_api_key:
+                raise ValueError("使用OpenRouter需要设置OPENROUTER_API_KEY或OPENAI_API_KEY环境变量")
+
+            logger.info(f"🌐 [OpenRouter] 使用API密钥: {openrouter_api_key[:20]}...")
+
+            self.deep_thinking_llm = ChatOpenAI(
+                model=self.config["deep_think_llm"],
+                base_url=self.config["backend_url"],
+                api_key=openrouter_api_key
+            )
+            self.quick_thinking_llm = ChatOpenAI(
+                model=self.config["quick_think_llm"],
+                base_url=self.config["backend_url"],
+                api_key=openrouter_api_key
+            )
+        elif self.config["llm_provider"] == "ollama":
+>>>>>>> 0a59bf4d6b5edcce49e889ef7375b24bebd5523d
             self.deep_thinking_llm = ChatOpenAI(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
             self.quick_thinking_llm = ChatOpenAI(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])
         elif self.config["llm_provider"].lower() == "anthropic":
@@ -95,7 +127,7 @@ class TradingAgentsGraph:
               "dashscope" in self.config["llm_provider"].lower() or
               "阿里百炼" in self.config["llm_provider"]):
             # 使用 OpenAI 兼容适配器，支持原生 Function Calling
-            print("🔧 使用阿里百炼 OpenAI 兼容适配器 (支持原生工具调用)")
+            logger.info(f"🔧 使用阿里百炼 OpenAI 兼容适配器 (支持原生工具调用)")
             self.deep_thinking_llm = ChatDashScopeOpenAI(
                 model=self.config["deep_think_llm"],
                 temperature=0.1,
@@ -110,6 +142,7 @@ class TradingAgentsGraph:
               "deepseek" in self.config["llm_provider"].lower()):
             # DeepSeek V3配置 - 使用支持token统计的适配器
             from tradingagents.llm_adapters.deepseek_adapter import ChatDeepSeek
+
 
             deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
             if not deepseek_api_key:
@@ -133,7 +166,7 @@ class TradingAgentsGraph:
                 max_tokens=2000
                 )
 
-            print(f"✅ [DeepSeek] 已启用token统计功能")
+            logger.info(f"✅ [DeepSeek] 已启用token统计功能")
         else:
             raise ValueError(f"Unsupported LLM provider: {self.config['llm_provider']}")
         
@@ -239,20 +272,20 @@ class TradingAgentsGraph:
         """Run the trading agents graph for a company on a specific date."""
 
         # 添加详细的接收日志
-        print(f"🔍 [GRAPH DEBUG] ===== TradingAgentsGraph.propagate 接收参数 =====")
-        print(f"🔍 [GRAPH DEBUG] 接收到的company_name: '{company_name}' (类型: {type(company_name)})")
-        print(f"🔍 [GRAPH DEBUG] 接收到的trade_date: '{trade_date}' (类型: {type(trade_date)})")
+        logger.debug(f"🔍 [GRAPH DEBUG] ===== TradingAgentsGraph.propagate 接收参数 =====")
+        logger.debug(f"🔍 [GRAPH DEBUG] 接收到的company_name: '{company_name}' (类型: {type(company_name)})")
+        logger.debug(f"🔍 [GRAPH DEBUG] 接收到的trade_date: '{trade_date}' (类型: {type(trade_date)})")
 
         self.ticker = company_name
-        print(f"🔍 [GRAPH DEBUG] 设置self.ticker: '{self.ticker}'")
+        logger.debug(f"🔍 [GRAPH DEBUG] 设置self.ticker: '{self.ticker}'")
 
         # Initialize state
-        print(f"🔍 [GRAPH DEBUG] 创建初始状态，传递参数: company_name='{company_name}', trade_date='{trade_date}'")
+        logger.debug(f"🔍 [GRAPH DEBUG] 创建初始状态，传递参数: company_name='{company_name}', trade_date='{trade_date}'")
         init_agent_state = self.propagator.create_initial_state(
             company_name, trade_date
         )
-        print(f"🔍 [GRAPH DEBUG] 初始状态中的company_of_interest: '{init_agent_state.get('company_of_interest', 'NOT_FOUND')}'")
-        print(f"🔍 [GRAPH DEBUG] 初始状态中的trade_date: '{init_agent_state.get('trade_date', 'NOT_FOUND')}')")
+        logger.debug(f"🔍 [GRAPH DEBUG] 初始状态中的company_of_interest: '{init_agent_state.get('company_of_interest', 'NOT_FOUND')}'")
+        logger.debug(f"🔍 [GRAPH DEBUG] 初始状态中的trade_date: '{init_agent_state.get('trade_date', 'NOT_FOUND')}'")
         args = self.propagator.get_graph_args()
 
         if self.debug:
