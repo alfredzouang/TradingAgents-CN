@@ -1,4 +1,6 @@
-# Python环境和缓存
+# Python环境和缓存# Ignore Kubernetes deployment script
+scripts/deploy_to_k8s.sh
+
 env/
 __pycache__/
 *.pyc

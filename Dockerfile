@@ -23,7 +23,7 @@ RUN apt-get update && \
 # Install Python dependencies in a clean target directory
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
-    pip install --prefix=/install --no-cache-dir -r requirements.txt
+    pip install --prefix=/install --no-cache-dir -r requirements.txt --upgrade
 
 # Copy application code (for possible build steps, e.g. static assets)
 COPY . .
