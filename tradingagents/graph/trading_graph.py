@@ -66,7 +66,6 @@ class TradingAgentsGraph:
         )
 
         # Initialize LLMs
-<<<<<<< HEAD
         if self.config["llm_provider"].lower() == "azureopenai":
             self.deep_thinking_llm = AzureChatOpenAI(
                 azure_deployment=self.config["deep_think_llm"],
@@ -79,30 +78,6 @@ class TradingAgentsGraph:
                 api_version="2024-12-01-preview"
             )
         elif self.config["llm_provider"].lower() == "openai" or self.config["llm_provider"] == "ollama" or self.config["llm_provider"] == "openrouter":
-=======
-        if self.config["llm_provider"].lower() == "openai":
-            self.deep_thinking_llm = ChatOpenAI(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
-            self.quick_thinking_llm = ChatOpenAI(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])
-        elif self.config["llm_provider"] == "openrouter":
-            # OpenRouter支持：优先使用OPENROUTER_API_KEY，否则使用OPENAI_API_KEY
-            openrouter_api_key = os.getenv('OPENROUTER_API_KEY') or os.getenv('OPENAI_API_KEY')
-            if not openrouter_api_key:
-                raise ValueError("使用OpenRouter需要设置OPENROUTER_API_KEY或OPENAI_API_KEY环境变量")
-
-            logger.info(f"🌐 [OpenRouter] 使用API密钥: {openrouter_api_key[:20]}...")
-
-            self.deep_thinking_llm = ChatOpenAI(
-                model=self.config["deep_think_llm"],
-                base_url=self.config["backend_url"],
-                api_key=openrouter_api_key
-            )
-            self.quick_thinking_llm = ChatOpenAI(
-                model=self.config["quick_think_llm"],
-                base_url=self.config["backend_url"],
-                api_key=openrouter_api_key
-            )
-        elif self.config["llm_provider"] == "ollama":
->>>>>>> 0a59bf4d6b5edcce49e889ef7375b24bebd5523d
             self.deep_thinking_llm = ChatOpenAI(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
             self.quick_thinking_llm = ChatOpenAI(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])
         elif self.config["llm_provider"].lower() == "anthropic":

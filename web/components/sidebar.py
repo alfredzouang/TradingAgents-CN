@@ -323,7 +323,7 @@ def render_sidebar():
 
             # 保存到持久化存储
             save_model_selection(st.session_state.llm_provider, st.session_state.model_category, llm_model)
-        else:  # openrouter
+        elif llm_provider == "openrouter":
             # OpenRouter模型分类选择
             model_category = st.selectbox(
                 "模型类别",
@@ -627,7 +627,38 @@ def render_sidebar():
 
             # OpenRouter特殊提示
             st.info("💡 **OpenRouter配置**: 在.env文件中设置OPENROUTER_API_KEY，或者如果只用OpenRouter可以设置OPENAI_API_KEY")
-        
+        elif llm_provider == "azureopenai":
+            st.markdown("### 🌐 Azure OpenAI")
+
+            # Azure OpenAI模型选择
+            azure_model = st.selectbox(
+                "选择Azure OpenAI模型",
+                options=[
+                    "o3",
+                    "o1",
+                    "gpt-4.1",
+                    "gpt-4o"
+                ],
+                index=0,
+                format_func=lambda x: {
+                    "o3": "O3 - 最新旗舰模型",
+                    "o1": "O1 - 强大的推理模型",
+                    "gpt-4.1": "GPT-4.1 - 强化版",
+                    "gpt-4o": "GPT-4o - 快速性价比"
+                }[x],
+                help="Azure OpenAI提供的模型选项"
+            )
+
+            # 更新session state和持久化存储
+            if st.session_state.llm_model != azure_model:
+                logger.info(f"🔄 [Persistence] Azure OpenAI模型变更: {st.session_state.llm_model} → {azure_model}")
+            st.session_state.llm_model = azure_model
+            logger.info(f"💾 [Persistence] Azure OpenAI模型已保存: {azure_model}")
+
+            # 保存到持久化存储
+            save_model_selection(st.session_state.llm_provider, st.session_state.model_category, azure_model)
+
+
         # 高级设置
         with st.expander("⚙️ 高级设置"):
             enable_memory = st.checkbox(

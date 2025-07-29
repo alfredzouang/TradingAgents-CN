@@ -1,5 +1,5 @@
 # 使用官方Python镜像替代GitHub Container Registry
-FROM python:3.10-slim-bookworm
+FROM python:3.10-slim-bookworm AS builder
 
 # 安装uv包管理器
 RUN pip install -i https://mirrors.aliyun.com/pypi/simple uv
@@ -23,7 +23,7 @@ RUN apt-get update && \
 # Install Python dependencies in a clean target directory
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
-    pip install --prefix=/install --no-cache-dir -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple
+    pip install --prefix=/install --no-cache-dir -r requirements.txt
 
 # Copy application code (for possible build steps, e.g. static assets)
 COPY . .
@@ -60,20 +60,6 @@ COPY --from=builder /app /app
 # Xvfb startup script
 RUN echo '#!/bin/bash\nXvfb :99 -screen 0 1024x768x24 -ac +extension GLX &\nexport DISPLAY=:99\nexec "$@"' > /usr/local/bin/start-xvfb.sh \
     && chmod +x /usr/local/bin/start-xvfb.sh
-
-COPY requirements.txt .
-
-#多源轮询安装依赖
-RUN set -e; \
-    for src in \
-        https://mirrors.aliyun.com/pypi/simple \
-        https://pypi.tuna.tsinghua.edu.cn/simple \
-        https://pypi.doubanio.com/simple \
-        https://pypi.org/simple; do \
-      echo "Try installing from $src"; \
-      pip install --no-cache-dir -r requirements.txt -i $src && break; \
-      echo "Failed at $src, try next"; \
-    done
 
 # 复制日志配置文件
 COPY config/ ./config/

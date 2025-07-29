@@ -10,7 +10,7 @@ DEFAULT_CONFIG = {
     ),
     # LLM settings
     "llm_provider": "azureopenai",
-    "deep_think_llm": "o1",
+    "deep_think_llm": "o3",
     "quick_think_llm": "o4-mini",
     "backend_url": "https://angzou-openai-eastus2.openai.azure.com/",
     # Debate and discussion settings
