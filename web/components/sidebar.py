@@ -260,9 +260,9 @@ def render_sidebar():
 
             # 更新session state和持久化存储
             if st.session_state.llm_model != llm_model:
-                logger.info(f"🔄 [Persistence] DashScope模型变更: {st.session_state.llm_model} → {llm_model}")
+                logger.debug(f"🔄 [Persistence] DashScope模型变更: {st.session_state.llm_model} → {llm_model}")
             st.session_state.llm_model = llm_model
-            logger.info(f"💾 [Persistence] DashScope模型已保存: {llm_model}")
+            logger.debug(f"💾 [Persistence] DashScope模型已保存: {llm_model}")
 
             # 保存到持久化存储
             save_model_selection(st.session_state.llm_provider, st.session_state.model_category, llm_model)
@@ -287,9 +287,9 @@ def render_sidebar():
 
             # 更新session state和持久化存储
             if st.session_state.llm_model != llm_model:
-                logger.info(f"🔄 [Persistence] DeepSeek模型变更: {st.session_state.llm_model} → {llm_model}")
+                logger.debug(f"🔄 [Persistence] DeepSeek模型变更: {st.session_state.llm_model} → {llm_model}")
             st.session_state.llm_model = llm_model
-            logger.info(f"💾 [Persistence] DeepSeek模型已保存: {llm_model}")
+            logger.debug(f"💾 [Persistence] DeepSeek模型已保存: {llm_model}")
 
             # 保存到持久化存储
             save_model_selection(st.session_state.llm_provider, st.session_state.model_category, llm_model)
@@ -317,9 +317,9 @@ def render_sidebar():
 
             # 更新session state和持久化存储
             if st.session_state.llm_model != llm_model:
-                logger.info(f"🔄 [Persistence] Google模型变更: {st.session_state.llm_model} → {llm_model}")
+                logger.debug(f"🔄 [Persistence] Google模型变更: {st.session_state.llm_model} → {llm_model}")
             st.session_state.llm_model = llm_model
-            logger.info(f"💾 [Persistence] Google模型已保存: {llm_model}")
+            logger.debug(f"💾 [Persistence] Google模型已保存: {llm_model}")
 
             # 保存到持久化存储
             save_model_selection(st.session_state.llm_provider, st.session_state.model_category, llm_model)
@@ -342,7 +342,7 @@ def render_sidebar():
 
             # 更新session state和持久化存储
             if st.session_state.model_category != model_category:
-                logger.info(f"🔄 [Persistence] 模型类别变更: {st.session_state.model_category} → {model_category}")
+                logger.debug(f"🔄 [Persistence] 模型类别变更: {st.session_state.model_category} → {model_category}")
                 st.session_state.llm_model = ""  # 类别变更时清空模型选择
             st.session_state.model_category = model_category
 
@@ -391,9 +391,9 @@ def render_sidebar():
 
                 # 更新session state和持久化存储
                 if st.session_state.llm_model != llm_model:
-                    logger.info(f"🔄 [Persistence] OpenAI模型变更: {st.session_state.llm_model} → {llm_model}")
+                    logger.debug(f"🔄 [Persistence] OpenAI模型变更: {st.session_state.llm_model} → {llm_model}")
                 st.session_state.llm_model = llm_model
-                logger.info(f"💾 [Persistence] OpenAI模型已保存: {llm_model}")
+                logger.debug(f"💾 [Persistence] OpenAI模型已保存: {llm_model}")
 
                 # 保存到持久化存储
                 save_model_selection(st.session_state.llm_provider, st.session_state.model_category, llm_model)
@@ -438,9 +438,9 @@ def render_sidebar():
 
                 # 更新session state和持久化存储
                 if st.session_state.llm_model != llm_model:
-                    logger.info(f"🔄 [Persistence] Anthropic模型变更: {st.session_state.llm_model} → {llm_model}")
+                    logger.debug(f"🔄 [Persistence] Anthropic模型变更: {st.session_state.llm_model} → {llm_model}")
                 st.session_state.llm_model = llm_model
-                logger.info(f"💾 [Persistence] Anthropic模型已保存: {llm_model}")
+                logger.debug(f"💾 [Persistence] Anthropic模型已保存: {llm_model}")
 
                 # 保存到持久化存储
                 save_model_selection(st.session_state.llm_provider, st.session_state.model_category, llm_model)
@@ -485,9 +485,9 @@ def render_sidebar():
 
                 # 更新session state和持久化存储
                 if st.session_state.llm_model != llm_model:
-                    logger.info(f"🔄 [Persistence] Meta模型变更: {st.session_state.llm_model} → {llm_model}")
+                    logger.debug(f"🔄 [Persistence] Meta模型变更: {st.session_state.llm_model} → {llm_model}")
                 st.session_state.llm_model = llm_model
-                logger.info(f"💾 [Persistence] Meta模型已保存: {llm_model}")
+                logger.debug(f"💾 [Persistence] Meta模型已保存: {llm_model}")
 
                 # 保存到持久化存储
                 save_model_selection(st.session_state.llm_provider, st.session_state.model_category, llm_model)
@@ -532,9 +532,9 @@ def render_sidebar():
 
                 # 更新session state和持久化存储
                 if st.session_state.llm_model != llm_model:
-                    logger.info(f"🔄 [Persistence] Google OpenRouter模型变更: {st.session_state.llm_model} → {llm_model}")
+                    logger.debug(f"🔄 [Persistence] Google OpenRouter模型变更: {st.session_state.llm_model} → {llm_model}")
                 st.session_state.llm_model = llm_model
-                logger.info(f"💾 [Persistence] Google OpenRouter模型已保存: {llm_model}")
+                logger.debug(f"💾 [Persistence] Google OpenRouter模型已保存: {llm_model}")
 
                 # 保存到持久化存储
                 save_model_selection(st.session_state.llm_provider, st.session_state.model_category, llm_model)
@@ -566,7 +566,7 @@ def render_sidebar():
                     st.session_state.custom_model = model_id
                     st.session_state.llm_model = model_id
                     save_model_selection(st.session_state.llm_provider, st.session_state.model_category, model_id)
-                    logger.info(f"💾 [Persistence] 快速选择Claude 3.7 Sonnet: {model_id}")
+                    logger.debug(f"💾 [Persistence] 快速选择Claude 3.7 Sonnet: {model_id}")
                     st.rerun()
 
                 if st.button("💎 Claude 4 Opus - 顶级性能模型", key="claude4opus", use_container_width=True):
@@ -574,7 +574,7 @@ def render_sidebar():
                     st.session_state.custom_model = model_id
                     st.session_state.llm_model = model_id
                     save_model_selection(st.session_state.llm_provider, st.session_state.model_category, model_id)
-                    logger.info(f"💾 [Persistence] 快速选择Claude 4 Opus: {model_id}")
+                    logger.debug(f"💾 [Persistence] 快速选择Claude 4 Opus: {model_id}")
                     st.rerun()
 
                 if st.button("🤖 GPT-4o - OpenAI旗舰模型", key="gpt4o", use_container_width=True):
@@ -582,7 +582,7 @@ def render_sidebar():
                     st.session_state.custom_model = model_id
                     st.session_state.llm_model = model_id
                     save_model_selection(st.session_state.llm_provider, st.session_state.model_category, model_id)
-                    logger.info(f"💾 [Persistence] 快速选择GPT-4o: {model_id}")
+                    logger.debug(f"💾 [Persistence] 快速选择GPT-4o: {model_id}")
                     st.rerun()
 
                 if st.button("🦙 Llama 4 Scout - Meta最新模型", key="llama4", use_container_width=True):
@@ -590,7 +590,7 @@ def render_sidebar():
                     st.session_state.custom_model = model_id
                     st.session_state.llm_model = model_id
                     save_model_selection(st.session_state.llm_provider, st.session_state.model_category, model_id)
-                    logger.info(f"💾 [Persistence] 快速选择Llama 4 Scout: {model_id}")
+                    logger.debug(f"💾 [Persistence] 快速选择Llama 4 Scout: {model_id}")
                     st.rerun()
 
                 if st.button("🌟 Gemini 2.5 Pro - Google多模态", key="gemini25", use_container_width=True):
@@ -598,15 +598,15 @@ def render_sidebar():
                     st.session_state.custom_model = model_id
                     st.session_state.llm_model = model_id
                     save_model_selection(st.session_state.llm_provider, st.session_state.model_category, model_id)
-                    logger.info(f"💾 [Persistence] 快速选择Gemini 2.5 Pro: {model_id}")
+                    logger.debug(f"💾 [Persistence] 快速选择Gemini 2.5 Pro: {model_id}")
                     st.rerun()
 
                 # 更新session state和持久化存储
                 if st.session_state.llm_model != llm_model:
-                    logger.info(f"🔄 [Persistence] 自定义模型变更: {st.session_state.llm_model} → {llm_model}")
+                    logger.debug(f"🔄 [Persistence] 自定义模型变更: {st.session_state.llm_model} → {llm_model}")
                 st.session_state.custom_model = llm_model
                 st.session_state.llm_model = llm_model
-                logger.info(f"💾 [Persistence] 自定义模型已保存: {llm_model}")
+                logger.debug(f"💾 [Persistence] 自定义模型已保存: {llm_model}")
 
                 # 保存到持久化存储
                 save_model_selection(st.session_state.llm_provider, st.session_state.model_category, llm_model)
@@ -820,7 +820,7 @@ def render_sidebar():
     final_provider = st.session_state.llm_provider
     final_model = st.session_state.llm_model
 
-    logger.info(f"🔄 [Session State] 返回配置 - provider: {final_provider}, model: {final_model}")
+    logger.debug(f"🔄 [Session State] 返回配置 - provider: {final_provider}, model: {final_model}")
 
     return {
         'llm_provider': final_provider,
