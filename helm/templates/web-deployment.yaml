@@ -17,6 +17,13 @@ spec:
         app: {{ include "tradingagents-cn.name" . }}
         component: web
     spec:
+      initContainers:
+        - name: init-monitor-config
+          image: busybox
+          command: ["/bin/sh", "-c", "if [ ! -f /mnt/monitor_config.yaml ]; then echo '[]' > /mnt/monitor_config.yaml; fi"]
+          volumeMounts:
+            - name: monitor-config
+              mountPath: /mnt
       containers:
         - name: web
           image: "{{ .Values.web.image }}:{{ .Values.web.tag }}"
@@ -24,6 +31,10 @@ spec:
           command: ["/bin/sh", "-c", "{{ .Values.web.command }}"]
           ports:
             - containerPort: {{ .Values.web.port }}
+          volumeMounts:
+            - name: monitor-config
+              mountPath: /app/web/monitor_config.yaml
+              subPath: monitor_config.yaml
           env:
           # From ConfigMap
           - name: DASHSCOPE_HTTP_BASE_URL
@@ -263,9 +274,17 @@ spec:
               secretKeyRef:
                 name: {{ include "tradingagents-cn.fullname" . }}-env
                 key: REDDIT_CLIENT_SECRET
+          - name: CELERY_BROKER_URL
+            value: redis://:{{ .Values.redis.password }}@{{ include "tradingagents-cn.fullname" . }}-redis:{{ .Values.redis.port }}/0
+          - name: CELERY_RESULT_BACKEND
+            value: redis://:{{ .Values.redis.password }}@{{ include "tradingagents-cn.fullname" . }}-redis:{{ .Values.redis.port }}/1
           {{- range $key, $value := .Values.web.env }}
           - name: {{ $key }}
             value: {{ $value | quote }}
           {{- end }}
           # volumeMounts removed: code and scripts now come from the image
       # volumes removed: code and scripts now come from the image
+      volumes:
+        - name: monitor-config
+          persistentVolumeClaim:
+            claimName: monitor-config-pvc

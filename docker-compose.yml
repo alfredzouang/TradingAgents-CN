@@ -21,21 +21,23 @@ services:
     environment:
       PYTHONUNBUFFERED: 1
       PYTHONDONTWRITEBYTECODE: 1
-      # 时区配置
       TZ: "Asia/Shanghai"
-      # 日志配置
       TRADINGAGENTS_LOG_LEVEL: "INFO"
       TRADINGAGENTS_LOG_DIR: "/app/logs"
       TRADINGAGENTS_LOG_FILE: "/app/logs/tradingagents.log"
       TRADINGAGENTS_LOG_MAX_SIZE: "100MB"
       TRADINGAGENTS_LOG_BACKUP_COUNT: "5"
-      # Docker专用数据库配置（覆盖.env中的本地配置）
       TRADINGAGENTS_MONGODB_URL: mongodb://admin:tradingagents123@mongodb:27017/tradingagents?authSource=admin
       TRADINGAGENTS_REDIS_URL: redis://:tradingagents123@redis:6379
       TRADINGAGENTS_CACHE_TYPE: redis
-      # Docker环境标识和PDF支持
       DOCKER_CONTAINER: "true"
       DISPLAY: ":99"
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      CELERY_BROKER_URL: redis://:tradingagents123@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:tradingagents123@redis:6379/1
     command: /usr/local/bin/start-xvfb.sh python -m streamlit run web/app.py --server.address=0.0.0.0 --server.port=8501
     depends_on:
       - mongodb
@@ -57,6 +59,66 @@ services:
       options:
         max-size: "100m"
         max-file: "3"
+
+  # Celery Worker 服务
+  celery_worker:
+    image: tradingagents-cn:latest
+    container_name: TradingAgents-celery-worker
+    command: celery -A web.tasks.monitor_tasks.celery_app worker --loglevel=INFO -Q monitor_serial --concurrency=1
+    volumes:
+      - .env:/app/.env
+      - ./web:/app/web
+      - ./tradingagents:/app/tradingagents
+      - ./scripts:/app/scripts
+      - ./logs:/app/logs
+    env_file:
+      - .env
+    environment:
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+      TZ: "Asia/Shanghai"
+      DOCKER_CONTAINER: "true"
+      DISPLAY: ":99"
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      CELERY_BROKER_URL: redis://:tradingagents123@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:tradingagents123@redis:6379/1
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - tradingagents-network
+    restart: unless-stopped
+
+  # Celery Beat 定时调度服务
+  celery_beat:
+    image: tradingagents-cn:latest
+    container_name: TradingAgents-celery-beat
+    command: celery -A web.tasks.monitor_tasks.celery_app beat --loglevel=INFO
+    volumes:
+      - .env:/app/.env
+      - ./web:/app/web
+      - ./tradingagents:/app/tradingagents
+      - ./scripts:/app/scripts
+      - ./logs:/app/logs
+    env_file:
+      - .env
+    environment:
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+      TZ: "Asia/Shanghai"
+      DOCKER_CONTAINER: "true"
+      DISPLAY: ":99"
+      CELERY_BROKER_URL: redis://:tradingagents123@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:tradingagents123@redis:6379/1
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - tradingagents-network
+    restart: unless-stopped
 
   # MongoDB数据库服务
   mongodb:

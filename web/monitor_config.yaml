@@ -1,0 +1,9 @@
+- email: angzou@microsoft.com
+  frequency: 每日
+  market_type: 美股
+  research_depth: 5
+  selected_analysts:
+  - 市场分析师
+  - 基本面分析师
+  send_time: 08:00
+  stock_symbol: MSFT

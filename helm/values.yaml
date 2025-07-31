@@ -1,26 +1,43 @@
 web:
-  image: tradingagents-cn:latest
+  image: tradingaz.azurecr.io/tradingagents-cn
   tag: latest
   port: 8501
+  command: /usr/local/bin/start-xvfb.sh python -m streamlit run web/app.py --server.address=0.0.0.0 --server.port=8501
   service:
     type: ClusterIP
+    port: 8501
+
+celeryWorker:
+  image: tradingaz.azurecr.io/tradingagents-cn
+  tag: latest
   env:
     PYTHONUNBUFFERED: "1"
     PYTHONDONTWRITEBYTECODE: "1"
-    TRADINGAGENTS_MONGODB_URL: mongodb://admin:tradingagents123@mongodb:27017/tradingagents?authSource=admin
-    TRADINGAGENTS_REDIS_URL: redis://:tradingagents123@redis:6379
-    TRADINGAGENTS_CACHE_TYPE: redis
+    TZ: "Asia/Shanghai"
     DOCKER_CONTAINER: "true"
     DISPLAY: ":99"
-  command: /usr/local/bin/start-xvfb.sh python -m streamlit run web/app.py --server.address=0.0.0.0 --server.port=8501
-  envFromSecret: false
+    CELERY_BROKER_URL: "redis://:tradingagents123@tradingagents-cn-tradingagents-cn-redis:6379/0"
+    CELERY_RESULT_BACKEND: "redis://:tradingagents123@tradingagents-cn-tradingagents-cn-redis:6379/1"
+  command: celery -A web.tasks.monitor_tasks.celery_app worker --loglevel=INFO -Q monitor_serial --concurrency=1
   volumeMounts:
-    - name: web-code
-      mountPath: /app/web
-    - name: tradingagents-code
-      mountPath: /app/tradingagents
-    - name: scripts
-      mountPath: /app/scripts
+    - name: logs
+      mountPath: /app/logs
+
+celeryBeat:
+  image: tradingaz.azurecr.io/tradingagents-cn
+  tag: latest
+  env:
+    PYTHONUNBUFFERED: "1"
+    PYTHONDONTWRITEBYTECODE: "1"
+    TZ: "Asia/Shanghai"
+    DOCKER_CONTAINER: "true"
+    DISPLAY: ":99"
+    CELERY_BROKER_URL: "redis://:tradingagents123@tradingagents-cn-tradingagents-cn-redis:6379/0"
+    CELERY_RESULT_BACKEND: "redis://:tradingagents123@tradingagents-cn-tradingagents-cn-redis:6379/1"
+  command: celery -A web.tasks.monitor_tasks.celery_app beat --loglevel=INFO
+  volumeMounts:
+    - name: logs
+      mountPath: /app/logs
 
 mongodb:
   image: mongo:4.4
