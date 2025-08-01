@@ -67,7 +67,7 @@ def build_beat_schedule():
 def main():
     celery_app.conf.beat_schedule = build_beat_schedule()
     celery_app.conf.timezone = "Asia/Shanghai"
-    celery_app.start(argv=["celery", "beat", "-l", "info"])
+    celery_app.start(argv=["beat", "-l", "info"])
 
 if __name__ == "__main__":
     main()

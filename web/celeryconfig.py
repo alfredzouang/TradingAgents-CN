@@ -6,6 +6,15 @@ import os
 
 broker_url = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
 result_backend = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/1")
+
+# 提升任务健壮性与持久化
+task_acks_late = True
+worker_prefetch_multiplier = 1
+task_acks_on_failure_or_timeout = True
+result_extended = True
+# 如需防止重复消费可开启（需 result_backend 支持持久化）：
+# worker_deduplicate_successful_tasks = True
+
 timezone = "Asia/Shanghai"
 enable_utc = False
 

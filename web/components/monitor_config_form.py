@@ -277,6 +277,12 @@ def render_monitor_config_form():
                     st.rerun()
 
     # 保存按钮
+    # 补全所有监控项的 llm_provider/llm_model 字段，防止持久化缺失
+    for item in monitor_config:
+        if "llm_provider" not in item:
+            item["llm_provider"] = "azureopenai"
+        if "llm_model" not in item:
+            item["llm_model"] = "o3"
     if st.button("💾 保存所有监控配置"):
         st.session_state['monitor_config_saved'] = True
         st.success("监控配置已保存（仅本地/会话，后续可持久化到文件）")

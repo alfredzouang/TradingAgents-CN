@@ -90,11 +90,18 @@ def is_trade_day(market_type, date_str):
         # 其他市场默认视为非交易日
         return False
 
-@celery_app.task(queue="monitor_serial")
+@celery_app.task(
+    queue="monitor_serial",
+    autoretry_for=(Exception,),
+    retry_kwargs={'max_retries': 5},
+    retry_backoff=True,
+    retry_jitter=True
+)
 def monitor_and_send_task(conf):
     """
     单条监控配置的分析与邮件发送任务
     conf: dict，包含 market_type, stock_symbol, research_depth, selected_analysts, email, 等
+    自动重试：遇到任意异常自动重试，最大5次，指数退避+抖动，提升健壮性。
     """
     try:
         stock_type = conf.get("market_type", "A股")
@@ -133,8 +140,8 @@ def monitor_and_send_task(conf):
             except Exception as e:
                 return f"[ERROR] {stock_code} 交易日判断失败: {e}"
 
-        llm_provider = os.getenv("LLM_PROVIDER", "dashscope")
-        llm_model = os.getenv("LLM_MODEL", "qwen-plus")
+        llm_provider = conf.get("llm_provider") or os.getenv("LLM_PROVIDER", "dashscope")
+        llm_model = conf.get("llm_model") or os.getenv("LLM_MODEL", "qwen-plus")
 
         # 1. 执行分析
         result = run_stock_analysis(

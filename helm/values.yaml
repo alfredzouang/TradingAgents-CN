@@ -34,7 +34,7 @@ celeryBeat:
     DISPLAY: ":99"
     CELERY_BROKER_URL: "redis://:tradingagents123@tradingagents-cn-tradingagents-cn-redis:6379/0"
     CELERY_RESULT_BACKEND: "redis://:tradingagents123@tradingagents-cn-tradingagents-cn-redis:6379/1"
-  command: celery -A web.tasks.monitor_tasks.celery_app beat --loglevel=INFO
+  command: python scripts/celery_beat.py
   volumeMounts:
     - name: logs
       mountPath: /app/logs
