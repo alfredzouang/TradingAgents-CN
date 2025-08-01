@@ -570,7 +570,7 @@ def main():
 
     page = st.sidebar.selectbox(
         "切换功能模块",
-        ["📊 股票分析", "⚙️ 配置管理", "💾 缓存管理", "💰 Token统计", "📈 历史记录", "🔧 系统状态"],
+        ["📊 股票分析", "📡 股票监控配置", "⚙️ 配置管理", "💾 缓存管理", "💰 Token统计", "📈 历史记录", "🔧 系统状态"],
         label_visibility="collapsed"
     )
 
@@ -578,6 +578,14 @@ def main():
     st.sidebar.markdown("---")
 
     # 根据选择的页面渲染不同内容
+    if page == "📡 股票监控配置":
+        try:
+            from modules.monitor_config import render_monitor_config
+            render_monitor_config()
+        except ImportError as e:
+            st.error(f"股票监控配置模块加载失败: {e}")
+            st.info("请确保已安装所有依赖包")
+        return
     if page == "⚙️ 配置管理":
         try:
             from modules.config_management import render_config_management

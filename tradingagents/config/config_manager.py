@@ -224,6 +224,7 @@ class ConfigManager:
                 PricingConfig("azureopenai", "gpt-4.1", 0.02, 0.08, "USD"),
                 PricingConfig("azureopenai", "o4-mini", 0.011, 0.044, "USD"),
                 PricingConfig("azureopenai", "o1", 0.15, 0.6, "USD"),
+                PricingConfig("azureopenai", "o3", 0.2, 0.08, "USD"),
             ]
             self.save_pricing(default_pricing)
         

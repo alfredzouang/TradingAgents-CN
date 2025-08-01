@@ -1,4 +1,4 @@
-# 注意：此文件已弃用，请使用 pyproject.toml
+# 注意：此文件已弃用，请使用 pyproject.tomlcelery[redis]
 # 推荐安装方式：pip install -e .
 # 或使用 uv：uv pip install -e .
 
@@ -46,3 +46,5 @@ extra-streamlit-components
 PyJWT
 pyyaml
 streamlit-authenticator
+celery
+markdown2

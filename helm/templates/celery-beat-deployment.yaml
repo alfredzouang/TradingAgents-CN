@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tradingagents-cn.fullname" . }}-celery-beat
+  labels:
+    app: {{ include "tradingagents-cn.name" . }}
+    component: celery-beat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "tradingagents-cn.name" . }}
+      component: celery-beat
+  template:
+    metadata:
+      labels:
+        app: {{ include "tradingagents-cn.name" . }}
+        component: celery-beat
+    spec:
+      containers:
+        - name: celery-beat
+          image: "{{ .Values.celeryBeat.image }}:{{ .Values.celeryBeat.tag }}"
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c", "{{ .Values.celeryBeat.command }}"]
+          env:
+            {{- range $key, $value := .Values.celeryBeat.env }}
+            - name: {{ $key }}
+              value: "{{ $value }}"
+            {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "tradingagents-cn.fullname" . }}-env
+            - secretRef:
+                name: {{ include "tradingagents-cn.name" . }}-smtp-secret
+          volumeMounts:
+            {{- range .Values.celeryBeat.volumeMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+            {{- end }}
+            - name: monitor-config
+              mountPath: /app/web/monitor_config.yaml
+              subPath: monitor_config.yaml
+      volumes:
+        - name: logs
+          persistentVolumeClaim:
+            claimName: logs-pvc
+        - name: monitor-config
+          persistentVolumeClaim:
+            claimName: monitor-config-pvc
